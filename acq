@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#var
+PATH1="/dev/sda1"
+PATH2="/dev/sdb1"
+PATH3="/dev/sdc1"
+PATH4="/dev/sdd1"
+
+echo "Disk Acquisition Starting..."
+
+echo "Flash Drive Detected..."
+detect=$(df -h | awk '{print $1}' | grep sd | sort) #> /dev/null 2>&1
+
+if [ $PATH1 == '$detect' ]
+then
+  echo ${PATH1}
+else
+  echo "no /dev/sda1"
+fi
