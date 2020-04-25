@@ -1,3 +1,6 @@
 #!/bin/bash
 
 echo "Disk Image Analysis Starts..."
+
+
+echo "Disk Image Analysis Done"
