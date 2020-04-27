@@ -1,6 +1,16 @@
 #!/bin/bash
 
+IMAGEPATH="/root/Desktop/test/"
+
 echo "Disk Image Analysis Starts..."
 
+IMAGE=$(ls $IMAGEPATH | grep ".dd")
+
+echo ${IMAGE}
+echo "Making directory for this image..."
+
+echo "Generating list of existing files in the disk image..."
+
+printf "$(fls -l -f fat ${IMAGEPATH}${IMAGE} | grep r/r | grep -v "*" | grep -v "._")\n"
 
 echo "Disk Image Analysis Done"

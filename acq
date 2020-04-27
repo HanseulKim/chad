@@ -5,42 +5,58 @@ PATH1="/dev/sda1"
 PATH2="/dev/sdb1"
 PATH3="/dev/sdc1"
 PATH4="/dev/sdd1"
-OFPATH="~/Desktop/text/"
+OFPATH="/root/Desktop/test/"
 DETECT=()
 
 echo "Disk Acquisition Starting..."
 
-echo "Flash Drive Detected..."
-mapfile -t DETECT < <(fdisk -l | grep sd | awk 'NR==2 {print $1}')
+echo "Detecting Flash Drive"
+mapfile -t DETECT < <(fdisk -l | grep "^/dev/sd*" | awk '{print $1}'| sed 's/://g'|sort)
 
 #TODO:Make it cleaner
 #TODO: Would there by any metadata to save from this stage
-#TODO: How, where those data should be saved?
-#ASSUMPTION: Make it constantly run
-#						 so that flash drives can be detected when they are plugged in
 if [ ${#DETECT[@]} -eq 0 ]; then
 	#DETECT array == empty
 	echo "No Flash Drive Detected"
 else
   for i in "${DETECT[@]}"
   do
-		SIZE="$(fdisk -l | grep sd | awk 'NR==1 {print $3$4}' | sed 's/,//g')"		
-		IMAGENAME=""
-    if [ "$i" == "$PATH1" ] ; then 
-			DATE=$(date -u "+%Y/%m/%d_%T")
-			IMAGENAME="${DATE}_${SIZE}_${PATH1}"
-			OF="${OFPATH}${IMAGENAME}"
-			#TODO: dcfldd has not been tested yet
-			echo $(dcfldd if="$PATH1" of="$OF" conv=notrunc,noerror)
-    elif [ "$i" == "$PATH2" ] ; then
-    	echo ${PATH2}
-    elif [ "$i" == "$PATH3" ] ; then
-	echo ${PATH3}
-    elif [ "$i" == "$PATH4" ] ; then
-	echo ${PATH4}
-    else
-	echo "Unexpected Path for the USB Device" 1>&2
-	exit 1
+		TEMP=$(echo $i | sed 's/1//g')
+		SIZE=$(fdisk -l | grep "Disk $TEMP" | awk '{print $3$4}' | sed 's/,//g')		
+		DATE=$(date -u "+%Y.%m.%d_%T")
+		FS=$(fdisk -l | grep "^$i" | grep -o 'FAT.*' | sed 's/ //g')
+		NAME="${DATE}_${SIZE}_${FS}"
+		NEWPATH="${OFPATH}${NAME}/"
+    if [ "$i" == "$PATH1" ] ; then
+		  printf "A device at $PATH1 detected\n"
+			printf "Cloning device at $PATH1 ... \n"
+			mkdir ${NEWPATH}
+			dcfldd if="$PATH1" of="${NEWPATH}image.dd" hash=md5 md5log="${NEWPATH}md5.txt" conv=notrunc,noerror
+    	printf "Image of ${PATH1} cloned at ${NEWPATH}\n"
+		elif [ "$i" == "$PATH2" ] ; then
+			printf "A device at $PATH2 detected\n"
+			printf "Cloning device at $PATH2 ...\n"
+			mkdir ${NEWPATH}
+			dcfldd if="$PATH2" of="${NEWPATH}image.dd" hash=md5 md5log="${NEWPATH}md5.txt" conv=notrunc,noerror
+    	printf "Image of ${PATH2} cloned at ${NEWPATH}\n"
+		elif [ "$i" == "$PATH3" ] ; then
+			printf "A device at $PATH3 detected\n"
+			printf "Cloning device at $PATH3 ...\n"
+			mkdir ${NEWPATH}
+			dcfldd if="$PATH3" of="${NEWPATH}image.dd" hash=md5 md5log="${NEWPATH}md5.txt" conv=notrunc,noerror
+    	printf "Image of ${PATH3} cloned at ${NEWPATH}\n"
+		elif [ "$i" == "$PATH4" ] ; then
+			printf "A device at $PATH4 detected\n"
+			printf "Cloning device at $Path4 ...\n"
+			mkdir ${NEWPATH}
+			dcfldd if="$PATH4" of="${MEWPATH}image.dd" hash=md5 md5log="${NEWPATH}md5.txt" conv=notrunc,noerror
+    	printf "Image of ${PATH4} cloned at ${NEWPATH}\n"
+		else
+			printf "Unexpected Path for the USB Device" 1>&2
+			exit 1
     fi
   done
 fi
+
+echo "Acuisition Done Successfully"
+exit 1
