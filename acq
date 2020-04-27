@@ -5,15 +5,42 @@ PATH1="/dev/sda1"
 PATH2="/dev/sdb1"
 PATH3="/dev/sdc1"
 PATH4="/dev/sdd1"
+OFPATH="~/Desktop/text/"
+DETECT=()
 
 echo "Disk Acquisition Starting..."
 
 echo "Flash Drive Detected..."
-detect=$(df -h | awk '{print $1}' | grep sd | sort) #> /dev/null 2>&1
+mapfile -t DETECT < <(fdisk -l | grep sd | awk 'NR==2 {print $1}')
 
-if [ $PATH1 == '$detect' ]
-then
-  echo ${PATH1}
+#TODO:Make it cleaner
+#TODO: Would there by any metadata to save from this stage
+#TODO: How, where those data should be saved?
+#ASSUMPTION: Make it constantly run
+#						 so that flash drives can be detected when they are plugged in
+if [ ${#DETECT[@]} -eq 0 ]; then
+	#DETECT array == empty
+	echo "No Flash Drive Detected"
 else
-  echo "no /dev/sda1"
+  for i in "${DETECT[@]}"
+  do
+		SIZE="$(fdisk -l | grep sd | awk 'NR==1 {print $3$4}' | sed 's/,//g')"		
+		IMAGENAME=""
+    if [ "$i" == "$PATH1" ] ; then 
+			DATE=$(date -u "+%Y/%m/%d_%T")
+			IMAGENAME="${DATE}_${SIZE}_${PATH1}"
+			OF="${OFPATH}${IMAGENAME}"
+			#TODO: dcfldd has not been tested yet
+			echo $(dcfldd if="$PATH1" of="$OF" conv=notrunc,noerror)
+    elif [ "$i" == "$PATH2" ] ; then
+    	echo ${PATH2}
+    elif [ "$i" == "$PATH3" ] ; then
+	echo ${PATH3}
+    elif [ "$i" == "$PATH4" ] ; then
+	echo ${PATH4}
+    else
+	echo "Unexpected Path for the USB Device" 1>&2
+	exit 1
+    fi
+  done
 fi
