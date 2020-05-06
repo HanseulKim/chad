@@ -1,16 +1,74 @@
 #!/bin/bash
 
-IMAGEPATH="/root/Desktop/test/"
+IMAGEPATH="/root/Desktop/test/*"
+
+#File Type Validation Function
+validate() {
+	inode=$1
+  magic=$2
+	extention=$3
+	dir=$4
+
+	touch "$4/file_type_log.txt"
+	if [[ "$2" =~ "ffd8ffe0" ]]; then
+		echo "The file is JPG"
+		if [[ "$3" != "jpg" ]]; then
+			echo "The file type for inode $1 is supposed to be jpg not $3"
+			echo "The file type for inode $1 is supposed to be jpg not $3" >> "$4/file_type_log.txt"
+		else
+			echo "The file type for inode $1 is correct!" 
+		fi
+	elif [[ "$2" == *"89504e47"* ]]; then
+		echo "The file is PNG"
+		if [[ "$3" != "png" ]]; then
+			echo "The file type for inode $1 is supposed to be png not $3" >> "$4/file_type_log.txt"
+		else
+			echo "The file type for inode $1 is correct!"
+		fi
+	elif [[ "$2" == *"255044462d"* ]] ; then
+		echo "The file is PDF"
+		if [[ "$3" != "pdf" ]]; then
+			echo "The file type for inode $1 is supposed to be pdf not $3" >> "$4/file_type_log.txt"
+		else
+			echo "The file type for inode $1 is correct!"
+		fi
+	fi
+}
 
 echo "Disk Image Analysis Starts..."
 
-IMAGE=$(ls $IMAGEPATH | grep ".dd")
+for DIR in /root/Desktop/test/*;
+do
+	echo "---------------------------------------------------------------------------------------------------"
+	echo $DIR
 
-echo ${IMAGE}
-echo "Making directory for this image..."
+	echo "Generating list of existing files in the disk image..."
 
-echo "Generating list of existing files in the disk image..."
+	fls -l -f fat "$DIR/image.dd"  | grep r/r | grep -v "*" | grep -v "._" | awk '{print "inode:"substr($2,1,length($2)-1) ";filename:" $3 ";modified_time:" $4$5$6 ";accessed_time:" $7$8$9 ";changed_time:" $10$11$12 ";created_time:" $13$14$15 ";size(bytes):"$16 ";uid:"$17 ";gid:"$18}' >> "$DIR/existing_file.txt"
 
-printf "$(fls -l -f fat ${IMAGEPATH}${IMAGE} | grep r/r | grep -v "*" | grep -v "._")\n"
+	printf "\nList of existing files >> existing_file.txt\n\n"
+	printf "$(cat "$DIR/existing_file.txt")\n"
+  echo "---------------------------------------------------------------------------------------------------"
 
-echo "Disk Image Analysis Done"
+	printf "File Type Validation Test\n"
+	mapfile -t INODE < <(fls "$DIR/image.dd" | grep r/r | grep -v "*" | grep -v "._" | awk '{print $2}' | sed "s/://g")
+
+	for i in "${INODE[@]}"
+	do
+		printf "\n Checking INODE: $i\n"
+		MAGIC=$(icat -f fat "$DIR/image.dd" $i | xxd | head | awk 'NR==1 {print $2 $3 $4}')
+		EXT=$(ffind -f fat "$DIR/image.dd" $i | awk -F '.' '{print $NF}')
+		validate $i $MAGIC $EXT $DIR
+	done
+
+	echo "---------------------------------------------------------------------------------------------------"
+	echo "Generating list of deleted files in the disk image..."
+
+	fls -l -f fat "$DIR/image.dd"  | grep r/r | grep "*" | awk '{print "inode:"substr($2,1,length($2)-1) ";filename:" $3 ";modified_time:" $4$5$6 ";accessed_time:" $7$8$9 ";changed_time:" $10$11$12 ";created_time:" $13$14$15 ";size(bytes):"$16 ";uid:"$17 ";gid:"$18}' >> "$DIR/deleted_file.txt"
+
+	printf "\nList of deleted files >> deleted_files.txt\n\n"
+	printf "$(cat "$DIR/deleted_file.txt")\n"
+	echo "---------------------------------------------------------------------------------------------------"
+	printf "\n\nDisk Image Analysis Done\n"
+
+done

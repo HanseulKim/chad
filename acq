@@ -13,8 +13,7 @@ echo "Disk Acquisition Starting..."
 echo "Detecting Flash Drive"
 mapfile -t DETECT < <(fdisk -l | grep "^/dev/sd*" | awk '{print $1}'| sed 's/://g'|sort)
 
-#TODO:Make it cleaner
-#TODO: Would there by any metadata to save from this stage
+# Detect & Clone the Flash Drive
 if [ ${#DETECT[@]} -eq 0 ]; then
 	#DETECT array == empty
 	echo "No Flash Drive Detected"
