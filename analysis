@@ -32,6 +32,34 @@ validate() {
 		else
 			echo "The file type for inode $1 is correct!"
 		fi
+	elif [[ "$2" == *"47494638"*  ]]; then
+		echo "The file is GIF"
+		if [[ "$3" != "gif" ]]; then
+			echo "The file type for inode $1 is supposed to be gif not $3" >> "$4/file_type_log.txt"
+		else
+			echo "The file type for inode $1 is correct!"
+		fi
+	elif [[ "$2" == *"0d444f43"* ]]; then
+		echo "The file is DOC"
+		if [[ "$3" != "doc" ]]; then
+			echo "The file type for inode $1 is supposed to be doc not $3" >> "$4/file_type_log.txt"
+		else
+			echo "The file type for inode $1 is correct!"
+		fi
+	elif [[ "$2" == *"38425053"* ]]; then
+		echo "The file is PSD"
+		if [[ "$3" != "psd" ]]; then
+			echo "The file type for inode $1 is supposed to be doc not $3" >> "$4/file_type_log.txt"
+		else
+			echo "The file type for inode $1 is correct!"
+		fi
+	elif [[ "$2" == *"4944ee"* ]]; then
+		echo "The file is MP3"
+		if [[ "$3" != "mp3" ]]; then
+			echo "The file type for inode $1 is supposed to be mp3 not $3" >> "$4/file_type_log.txt"
+		else
+			echo "The file type for inode $1 is correct!"
+		fi
 	fi
 }
 
